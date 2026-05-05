@@ -62,6 +62,24 @@ router.post('/', authenticate, allowRoles('admin'), async (req, res, next) => {
   }
 });
 
+router.put('/me', authenticate, allowRoles('student'), async (req, res, next) => {
+  try {
+    const { name, phone, roomNo } = req.body;
+    if (!name || !roomNo)
+      return res.status(400).json({ message: 'Name and room number are required.' });
+
+    await db.query('UPDATE users SET name = $1 WHERE user_id = $2', [name, req.user.id]);
+    await db.query('UPDATE students SET phone = $1, room_no = $2 WHERE user_id = $3', [phone || null, roomNo, req.user.id]);
+
+    const result = await db.query(
+      `SELECT s.student_id, s.roll_no, u.name, u.email, s.department, s.room_no, s.phone, s.joined_on
+       FROM students s JOIN users u ON u.user_id = s.user_id WHERE s.user_id = $1`,
+      [req.user.id]
+    );
+    return res.json(result.rows[0]);
+  } catch (error) { return next(error); }
+});
+
 router.delete('/:id', authenticate, allowRoles('admin'), async (req, res, next) => {
   try {
     const result = await db.query(
@@ -81,4 +99,4 @@ router.delete('/:id', authenticate, allowRoles('admin'), async (req, res, next) 
   }
 });
 
-module.exports = router;
+module.exports = router;;
