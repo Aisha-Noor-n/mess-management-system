@@ -119,7 +119,9 @@ jobs:
       - name: Add EC2 to Known Hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 700 ~/.ssh
+          ssh-keyscan -T 60 -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
       # FIXED: No -i flag needed — ssh-agent handles auth automatically
       - name: Deploy to EC2
